@@ -1,4 +1,5 @@
 import {toStr} from '/lib/util';
+import {create as createContent} from '/lib/xp/content';
 import {run} from '/lib/xp/context';
 import {
 	connect,
@@ -54,6 +55,21 @@ function task() {
 		branch: 'master',
 		principals: ['role:system.admin']
 	}, () => {
+		const createContentParams = {
+			parentPath: '/',
+			name: 'highlightSite',
+			//contentType: 'base:unstructured',
+			contentType: 'portal:site',
+			data: LORUM
+		};
+		log.info(`createContentParams:${toStr(createContentParams)}`);
+		try {
+			const createContentRes = createContent(createContentParams);
+			log.info(`createContentRes:${toStr(createContentRes)}`);
+		} catch (e) {
+			log.error(`e.class.name:${toStr(e.class.name)} e.message:${toStr(e.message)}`, e);
+		}
+
 		const createRepoParams1 = {
 			id: REPO_ID_1
 		};
