@@ -13,6 +13,8 @@ const LORUM = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do e
 const QUERY_PARAMS = {
 	aggregations: {},
 	count: -1,
+	explain: true,
+	filters: {},
 	highlight: {
 		fragmentSize: 15,
 		fragmenter: 'simple',
