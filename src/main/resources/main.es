@@ -1,5 +1,8 @@
 import {toStr} from '/lib/util';
-import {create as createContent} from '/lib/xp/content';
+import {
+	create as createContent,
+	query as queryContent
+} from '/lib/xp/content';
 import {run} from '/lib/xp/context';
 import {
 	connect,
@@ -28,6 +31,30 @@ const QUERY_PARAMS = {
 		postTag: '</b>',
 		preTag: '<b>',
 		properties: {
+			_allText: {
+				//encoder: '',
+				fragmenter: 'simple',
+				fragmentSize: 100,
+				order: 'none',
+				noMatchSize: 10,
+				numberOfFragments: 5,
+				postTag: '</b>',
+				preTag: '<b>',
+				requireFieldMatch: false,
+				tagsSchema: 'styled'
+			},
+			'data.text': {
+				//encoder: '',
+				fragmenter: 'simple',
+				fragmentSize: 100,
+				order: 'none',
+				noMatchSize: 10,
+				numberOfFragments: 5,
+				postTag: '</b>',
+				preTag: '<b>',
+				requireFieldMatch: false,
+				tagsSchema: 'styled'
+			},
 			data: {
 				//encoder: '',
 				fragmenter: 'simple',
@@ -44,32 +71,63 @@ const QUERY_PARAMS = {
 		requireFieldMatch: false, // requireFieldMatch can be set to false which will cause any property to be highlighted regardless of whether its value matches the query. The default behaviour is true, meaning that only properties that match the query will be highlighted.
 		tagsSchema: 'styled' // Set to styled to use the built-in tag schema.
 	},
-	query: "fulltext('data', 'amet')",
+	query: "fulltext('_allText', 'amet') OR fulltext('data.text', 'amet') OR fulltext('data', 'amet')",
 	sort: 'score DESC',
 	start: 0
 };
 
 function task() {
 	run({
+		repository: 'com.enonic.cms.default',
+		branch: 'draft',
+		principals: ['role:system.admin']
+	}, () => {
+		const createSiteParams = {
+			parentPath: '/',
+			name: 'highlightSite',
+			contentType: 'portal:site',
+			data: {}
+			//data: LORUM // Doesn't work
+		};
+		log.debug(`createSiteParams:${toStr(createSiteParams)}`);
+		try {
+			const createSiteRes = createContent(createSiteParams);
+			log.debug(`createSiteRes:${toStr(createSiteRes)}`);
+		} catch (e) {
+			if (e.class.name !== 'com.enonic.xp.content.ContentAlreadyExistsException') {
+				log.error(`e.class.name:${toStr(e.class.name)} e.message:${toStr(e.message)}`, e);
+			}
+		}
+
+		const createContentParams = {
+			parentPath: '/highlightSite',
+			name: 'highlightContent',
+			//contentType: 'base:structured', // e.class.name:"java.lang.IllegalArgumentException" e.message:"Cannot create content with an abstract type [base:structured]"
+			//contentType: 'base:unstructured',
+			contentType: `${app.name}:highlight`,
+			data: {
+				text: LORUM
+			}
+		};
+		log.debug(`createContentParams:${toStr(createContentParams)}`);
+		try {
+			const createContentRes = createContent(createContentParams);
+			log.debug(`createContentRes:${toStr(createContentRes)}`);
+		} catch (e) {
+			if (e.class.name !== 'com.enonic.xp.content.ContentAlreadyExistsException') {
+				log.error(`e.class.name:${toStr(e.class.name)} e.message:${toStr(e.message)}`, e);
+			}
+		}
+
+		const queryContentRes = queryContent(QUERY_PARAMS);
+		log.info(`queryContentRes:${toStr(queryContentRes)}`);
+	}); // run cms.default
+
+	run({
 		repository: 'system-repo',
 		branch: 'master',
 		principals: ['role:system.admin']
 	}, () => {
-		const createContentParams = {
-			parentPath: '/',
-			name: 'highlightSite',
-			//contentType: 'base:unstructured',
-			contentType: 'portal:site',
-			data: LORUM
-		};
-		log.info(`createContentParams:${toStr(createContentParams)}`);
-		try {
-			const createContentRes = createContent(createContentParams);
-			log.info(`createContentRes:${toStr(createContentRes)}`);
-		} catch (e) {
-			log.error(`e.class.name:${toStr(e.class.name)} e.message:${toStr(e.message)}`, e);
-		}
-
 		const createRepoParams1 = {
 			id: REPO_ID_1
 		};
