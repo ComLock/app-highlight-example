@@ -15,66 +15,41 @@ const REPO_ID_1 = `${app.name}.1`;
 const REPO_ID_2 = `${app.name}.2`;
 const LORUM = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
 const QUERY_PARAMS = {
-	aggregations: {},
-	count: -1,
-	explain: true,
-	filters: {},
+	//aggregations: {},
+	//count: -1, // BUG Highlight doesn't work when count is -1
+	//count: 10,
+	//explain: true, // BUG Does nothing?
+	//filters: {},
 	highlight: {
 		//encoder: '' // Indicates if the snippet should be HTML encoded: default (no encoding) or html.
-		fragmentSize: 100, // The size of the highlighted fragment in characters. Defaults to 100.
-		fragmenter: 'simple',
+		fragmentSize: -1, // The size of the highlighted fragment in characters. Defaults to 100.
+		//fragmenter: 'simple',
 		//fragmenter: 'span',
-		noMatchSize: 10, // The amount of characters you want to return from the beginning of the property if there are no matching fragments to highlight. Defaults to 0 (nothing is returned).
-		numberOfFragments: 5, // The maximum number of fragments to return. If numberOfFragments is 0, no fragments will be returned and fragmentSize will be ignored. Defaults to 5.
-		order: 'none', // Sorts highlighted fragments by score when set to score. Defaults to none - will be displayed in the same order in which fragments appear in the property.
+		//noMatchSize: 10, // The amount of characters you want to return from the beginning of the property if there are no matching fragments to highlight. Defaults to 0 (nothing is returned).
+		numberOfFragments: 1, // The maximum number of fragments to return. If numberOfFragments is 0, no fragments will be returned and fragmentSize will be ignored. Defaults to 5.
+		//order: 'none', // Sorts highlighted fragments by score when set to score. Defaults to none - will be displayed in the same order in which fragments appear in the property.
 		//order: 'score',
 		postTag: '</b>',
 		preTag: '<b>',
 		properties: {
-			_allText: {
-				//encoder: '',
-				fragmenter: 'simple',
-				fragmentSize: 100,
-				order: 'none',
-				noMatchSize: 10,
-				numberOfFragments: 5,
-				postTag: '</b>',
-				preTag: '<b>',
-				requireFieldMatch: false,
-				tagsSchema: 'styled'
-			},
-			'data.text': {
-				//encoder: '',
-				fragmenter: 'simple',
-				fragmentSize: 100,
-				order: 'none',
-				noMatchSize: 10,
-				numberOfFragments: 5,
-				postTag: '</b>',
-				preTag: '<b>',
-				requireFieldMatch: false,
-				tagsSchema: 'styled'
-			},
-			data: {
-				//encoder: '',
-				fragmenter: 'simple',
-				fragmentSize: 100,
-				order: 'none',
-				noMatchSize: 10,
-				numberOfFragments: 5,
-				postTag: '</b>',
-				preTag: '<b>',
-				requireFieldMatch: false,
-				tagsSchema: 'styled'
-			}
-		},
-		requireFieldMatch: false, // requireFieldMatch can be set to false which will cause any property to be highlighted regardless of whether its value matches the query. The default behaviour is true, meaning that only properties that match the query will be highlighted.
-		tagsSchema: 'styled' // Set to styled to use the built-in tag schema.
+			_allText: {},
+			'data.text': {},
+			data: {}
+		}//,
+		// requireFieldMatch can be set to false which will cause any property
+		// to be highlighted regardless of whether its value matches the query.
+		// The default behaviour is true, meaning that only properties that
+		// match the query will be highlighted.
+		//requireFieldMatch: false,
+		//tagsSchema: 'styled' // Set to styled to use the built-in tag schema.
 	},
-	query: "fulltext('_allText', 'amet') OR fulltext('data.text', 'amet') OR fulltext('data', 'amet')",
-	sort: 'score DESC',
-	start: 0
+	//query: "fulltext('_allText', 'dolor') OR fulltext('data.text', 'dolor') OR fulltext('data', 'dolor')"//,
+	//query: "ngram('_allText', 'dolor') OR ngram('data.text', 'dolor') OR ngram('data', 'dolor')"//,
+	query: "fulltext('_allText', 'dolor~1') OR fulltext('data.text', 'dolor~1') OR fulltext('data', 'dolor~1')"
+	//sort: 'score DESC',
+	//start: 0
 };
+log.info(`QUERY_PARAMS:${toStr(QUERY_PARAMS)}`);
 
 function task() {
 	run({
@@ -87,7 +62,6 @@ function task() {
 			name: 'highlightSite',
 			contentType: 'portal:site',
 			data: {}
-			//data: LORUM // Doesn't work
 		};
 		log.debug(`createSiteParams:${toStr(createSiteParams)}`);
 		try {
@@ -102,8 +76,6 @@ function task() {
 		const createContentParams = {
 			parentPath: '/highlightSite',
 			name: 'highlightContent',
-			//contentType: 'base:structured', // e.class.name:"java.lang.IllegalArgumentException" e.message:"Cannot create content with an abstract type [base:structured]"
-			//contentType: 'base:unstructured',
 			contentType: `${app.name}:highlight`,
 			data: {
 				text: LORUM
@@ -120,6 +92,17 @@ function task() {
 		}
 
 		const queryContentRes = queryContent(QUERY_PARAMS);
+		log.debug(`queryContentRes:${toStr(queryContentRes)}`);
+
+		queryContentRes.hits = queryContentRes.hits.map(({
+			_path,
+			//_name,
+			data
+		}) => ({
+			_path,
+			//_name,
+			data
+		}));
 		log.info(`queryContentRes:${toStr(queryContentRes)}`);
 	}); // run cms.default
 
@@ -162,39 +145,22 @@ function task() {
 			}
 		}
 
-		/*const queryParams1 = {
-			aggregations: {},
-			count: -1,
-			highlight: {
-				fragmentSize: 15,
-				fragmenter: 'simple',
-				//fragmenter: 'span',
-				numberOfFragments: 2,
-				order: 'none',
-				//order: 'score',
-				postTag: '</b>',
-				preTag: '<b>',
-				properties: {
-					data: {
-						fragmentSize: 15,
-						numberOfFragments: 2
-					}
-				},
-				requireFieldMatch: false // requireFieldMatch can be set to false which will cause any property to be highlighted regardless of whether its value matches the query. The default behaviour is true, meaning that only properties that match the query will be highlighted.
-			},
-			query: "fulltext('data', 'amet')",
-			sort: 'score DESC',
-			start: 0
-		};
-		log.debug(`queryParams1:${toStr(queryParams1)}`);*/
 		const queryRes1 = connection1.query(QUERY_PARAMS);
 		log.debug(`queryRes1:${toStr(queryRes1)}`);
 
-		queryRes1.mappedHits = queryRes1.hits.map(({id}) => {
+		queryRes1.hits = queryRes1.hits.map(({
+			highlight,
+			id,
+			score
+		}) => {
 			const node = connection1.get(id);
 			return {
-				_id: node._id,
-				data: node.data
+				highlight,
+				id,
+				node: {
+					data: node.data
+				},
+				score
 			};
 		});
 		log.info(`queryRes1:${toStr(queryRes1)}`);
@@ -232,39 +198,22 @@ function task() {
 			}
 		}
 
-		/*const queryParams2 = {
-			aggregations: {},
-			count: -1,
-			highlight: {
-				fragmentSize: 15,
-				fragmenter: 'simple',
-				//fragmenter: 'span',
-				numberOfFragments: 2,
-				order: 'none',
-				//order: 'score',
-				postTag: '</b>',
-				preTag: '<b>',
-				properties: {
-					data: {
-						fragmentSize: 15,
-						numberOfFragments: 2
-					}
-				},
-				requireFieldMatch: false // requireFieldMatch can be set to false which will cause any property to be highlighted regardless of whether its value matches the query. The default behaviour is true, meaning that only properties that match the query will be highlighted.
-			},
-			query: "fulltext('data', 'amet')",
-			sort: 'score DESC',
-			start: 0
-		};
-		log.debug(`queryParams2:${toStr(queryParams2)}`);*/
 		const queryRes2 = connection2.query(QUERY_PARAMS);
 		log.debug(`queryRes2:${toStr(queryRes2)}`);
 
-		queryRes2.mappedHits = queryRes2.hits.map(({id}) => {
+		queryRes2.hits = queryRes2.hits.map(({
+			highlight,
+			id,
+			score
+		}) => {
 			const node = connection2.get(id);
 			return {
-				_id: node._id,
-				data: node.data
+				highlight,
+				id,
+				node: {
+					data: node.data
+				},
+				score
 			};
 		});
 		log.info(`queryRes2:${toStr(queryRes2)}`);
@@ -282,38 +231,16 @@ function task() {
 		};
 		log.debug(`multiRepoConnectParams:${toStr(multiRepoConnectParams)}`);
 		const multiRepoConnection = multiRepoConnect(multiRepoConnectParams);
-		/*const multiRepoQueryParams = {
-			aggregations: {},
-			count: -1,
-			highlight: {
-				fragmentSize: 15,
-				fragmenter: 'simple',
-				//fragmenter: 'span',
-				numberOfFragments: 2,
-				order: 'none',
-				//order: 'score',
-				postTag: '</b>',
-				preTag: '<b>',
-				properties: {
-					data: {
-						fragmentSize: 15,
-						numberOfFragments: 2
-					}
-				},
-				requireFieldMatch: false // requireFieldMatch can be set to false which will cause any property to be highlighted regardless of whether its value matches the query. The default behaviour is true, meaning that only properties that match the query will be highlighted.
-			},
-			query: "fulltext('data', 'amet')",
-			sort: 'score DESC',
-			start: 0
-		};
-		log.debug(`multiRepoQueryParams:${toStr(multiRepoQueryParams)}`);*/
+
 		const multiRepoQueryRes = multiRepoConnection.query(QUERY_PARAMS);
 		log.debug(`multiRepoQueryRes:${toStr(multiRepoQueryRes)}`);
 
-		multiRepoQueryRes.mappedHits = multiRepoQueryRes.hits.map(({
+		multiRepoQueryRes.hits = multiRepoQueryRes.hits.map(({
 			branch,
+			highlight,
 			id,
-			repoId
+			repoId,
+			score
 		}) => {
 			const singleConnectParams = {
 				branch,
@@ -326,12 +253,15 @@ function task() {
 			return {
 				repoId,
 				branch,
-				_id: id,
-				data: node.data
+				id,
+				highlight,
+				node: {
+					data: node.data
+				},
+				score
 			};
 		});
 		log.info(`multiRepoQueryRes:${toStr(multiRepoQueryRes)}`);
-		log.info(`QUERY_PARAMS:${toStr(QUERY_PARAMS)}`);
 	}); // run
 } // function task
 
