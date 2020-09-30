@@ -16,21 +16,32 @@ const QUERY_PARAMS = {
 	explain: true,
 	filters: {},
 	highlight: {
-		fragmentSize: 15,
+		//encoder: '' // Indicates if the snippet should be HTML encoded: default (no encoding) or html.
+		fragmentSize: 100, // The size of the highlighted fragment in characters. Defaults to 100.
 		fragmenter: 'simple',
 		//fragmenter: 'span',
-		numberOfFragments: 2,
-		order: 'none',
+		noMatchSize: 10, // The amount of characters you want to return from the beginning of the property if there are no matching fragments to highlight. Defaults to 0 (nothing is returned).
+		numberOfFragments: 5, // The maximum number of fragments to return. If numberOfFragments is 0, no fragments will be returned and fragmentSize will be ignored. Defaults to 5.
+		order: 'none', // Sorts highlighted fragments by score when set to score. Defaults to none - will be displayed in the same order in which fragments appear in the property.
 		//order: 'score',
 		postTag: '</b>',
 		preTag: '<b>',
 		properties: {
 			data: {
-				fragmentSize: 15,
-				numberOfFragments: 2
+				//encoder: '',
+				fragmenter: 'simple',
+				fragmentSize: 100,
+				order: 'none',
+				noMatchSize: 10,
+				numberOfFragments: 5,
+				postTag: '</b>',
+				preTag: '<b>',
+				requireFieldMatch: false,
+				tagsSchema: 'styled'
 			}
 		},
-		requireFieldMatch: false // requireFieldMatch can be set to false which will cause any property to be highlighted regardless of whether its value matches the query. The default behaviour is true, meaning that only properties that match the query will be highlighted.
+		requireFieldMatch: false, // requireFieldMatch can be set to false which will cause any property to be highlighted regardless of whether its value matches the query. The default behaviour is true, meaning that only properties that match the query will be highlighted.
+		tagsSchema: 'styled' // Set to styled to use the built-in tag schema.
 	},
 	query: "fulltext('data', 'amet')",
 	sort: 'score DESC',
