@@ -12,40 +12,20 @@ const REPO_ID_1 = `${app.name}.1`;
 const REPO_ID_2 = `${app.name}.2`;
 const LORUM = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
 const QUERY_PARAMS = {
-	aggregations: {},
+	//aggregations: {},
 	count: -1,
-	explain: true,
-	filters: {},
+	//explain: true,
+	//filters: {},
 	highlight: {
-		//encoder: '' // Indicates if the snippet should be HTML encoded: default (no encoding) or html.
-		fragmentSize: 100, // The size of the highlighted fragment in characters. Defaults to 100.
-		fragmenter: 'simple',
-		//fragmenter: 'span',
-		noMatchSize: 10, // The amount of characters you want to return from the beginning of the property if there are no matching fragments to highlight. Defaults to 0 (nothing is returned).
-		numberOfFragments: 5, // The maximum number of fragments to return. If numberOfFragments is 0, no fragments will be returned and fragmentSize will be ignored. Defaults to 5.
-		order: 'none', // Sorts highlighted fragments by score when set to score. Defaults to none - will be displayed in the same order in which fragments appear in the property.
-		//order: 'score',
 		postTag: '</b>',
 		preTag: '<b>',
 		properties: {
 			data: {
-				//encoder: '',
-				fragmenter: 'simple',
-				fragmentSize: 100,
-				order: 'none',
-				noMatchSize: 10,
-				numberOfFragments: 5,
-				postTag: '</b>',
-				preTag: '<b>',
-				requireFieldMatch: false,
-				tagsSchema: 'styled'
+				field: {},
 			}
-		},
-		requireFieldMatch: false, // requireFieldMatch can be set to false which will cause any property to be highlighted regardless of whether its value matches the query. The default behaviour is true, meaning that only properties that match the query will be highlighted.
-		tagsSchema: 'styled' // Set to styled to use the built-in tag schema.
+		}
 	},
-	query: "fulltext('data', 'amet')",
-	sort: 'score DESC',
+	query: "fulltext('data.field', 'amet')",
 	start: 0
 };
 
@@ -54,13 +34,16 @@ function task() {
 		repository: 'system-repo',
 		branch: 'master',
 		principals: ['role:system.admin']
-	}, () => {
+	}, () => {/*
 		const createContentParams = {
 			parentPath: '/',
 			name: 'highlightSite',
 			//contentType: 'base:unstructured',
 			contentType: 'portal:site',
-			data: LORUM
+			language: 'en',
+			data: {
+				"field": LORUM
+			}
 		};
 		log.info(`createContentParams:${toStr(createContentParams)}`);
 		try {
@@ -69,7 +52,7 @@ function task() {
 		} catch (e) {
 			log.error(`e.class.name:${toStr(e.class.name)} e.message:${toStr(e.message)}`, e);
 		}
-
+*/
 		const createRepoParams1 = {
 			id: REPO_ID_1
 		};
@@ -93,7 +76,9 @@ function task() {
 		const createNodeParams1 = {
 			_name: '1',
 			_path: '/',
-			data: LORUM
+			data: {
+				"field": LORUM
+			}
 		};
 		log.debug(`createNodeParams1:${toStr(createNodeParams1)}`);
 		try {
@@ -163,7 +148,9 @@ function task() {
 		const createNodeParams2 = {
 			_name: '2',
 			_path: '/',
-			data: LORUM
+			data: {
+				"field": LORUM
+			}
 		};
 		log.debug(`createNodeParams2:${toStr(createNodeParams2)}`);
 		try {
