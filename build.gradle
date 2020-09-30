@@ -79,6 +79,7 @@ node {
 	download true
 }
 
+yarn.dependsOn(yarn_install)
 
 //──────────────────────────────────────────────────────────────────────────────
 // Webpack
